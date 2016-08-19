@@ -1,0 +1,99 @@
+import datetime
+from flask import Markup, url_for
+from flask_appbuilder.models.mixins import AuditMixin, FileColumn
+from sqlalchemy import Column, Text, Table, Integer, String, ForeignKey, Date
+from sqlalchemy.orm import relationship
+from flask_appbuilder import Model
+from flask_appbuilder.filemanager import get_file_original_name
+from sqlalchemy.dialects import postgresql
+
+mindate = datetime.date(datetime.MINYEAR, 1, 1)
+
+
+class user_info(Model):
+    __tablename__ = 'user_info'
+    usr_id = Column(Integer, primary_key=True)
+    usr_name = Column(String(45), nullable=False)
+
+    def __repr__(self):
+        return self.usr_name
+
+
+
+class project(Model):
+    __tablename__ = 'project'
+    proj_id = Column(Integer, primary_key=True)
+    proj_name = Column(String(45), nullable=False)
+
+    def __repr__(self):
+        return self.proj_name
+
+
+class sample(Model):
+    __tablename__ = 'sample'
+    samp_id = Column(Integer, primary_key=True)
+    samp_name = Column(String(100), nullable=False)
+    nick_name = Column(String(45))
+
+    def __repr__(self):
+        return self.samp_name
+
+
+class machine(Model):
+    __tablename__ = 'machine'
+    mach_id = Column(Integer, primary_key=True)
+    mach_type_name = Column(String(45), nullable=False)
+    mach_name = Column(String(45), nullable=False)
+
+    def __repr__(self):
+        return self.mach_name
+
+
+class files(Model):
+    __tablename__ = 'files'
+    unique_id = Column(Integer, primary_key=True)
+    file_set_id = Column(Integer, nullable=False)
+    file_name = Column(String(250), nullable=False)
+
+    def __repr__(self):
+        return self.file_name
+
+
+class combined(Model):
+    __tablename__ = 'combined'
+    proj_samp_mach_id = Column(Integer, primary_key=True)
+    mach_id = Column(Integer, ForeignKey('machine.mach_id'), nullable=False)
+    machine = relationship("machine")
+    usr_id = Column(Integer, ForeignKey('user_info.usr_id'), nullable=False)
+    user_info = relationship("user_info")
+    proj_id = Column(Integer, ForeignKey('project.proj_id'), nullable=False)
+    project = relationship("project")
+    samp_id = Column(Integer, ForeignKey('sample.samp_id'), nullable=False)
+    sample = relationship("sample")
+    date_created = Column(Date, nullable=True)
+
+    #files = Column(postgresql.ARRAY(String(250)),  nullable=False)
+
+    file = Column(FileColumn, ForeignKey('files.file_set_id'), nullable=False)
+    files = relationship("files")
+
+    def download(self):
+        print 'Hello from download()'
+	#a = []
+	#for name in self.file:
+	Markup('<a href="' + url_for('CombinedModelView.download', filename=str(self.file)) + '">Download</a>')
+	#return a
+
+    def file_name(self):
+        print 'Hello from file_name()'
+        #return get_file_original_name('abc')
+        return get_file_original_name(str(self.file))
+
+    def month_year(self):
+        date = self.date_created or mindate
+        return datetime.datetime(date.year, date.month, 1) or mindate
+
+    def year(self):
+        date = self.date_created or mindate
+        return datetime.datetime(date.year, 1, 1)
+
