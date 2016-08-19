@@ -1,7 +1,10 @@
 import calendar
 import os
 from flask import flash, url_for, request, current_app, jsonify
-from flask_appbuilder import ModelView, BaseView, expose
+from flask_appbuilder import ModelView, BaseView, expose, has_access, RestCRUDView
+from flask_appbuilder.views import expose_api, get_filter_args, make_response
+from flask_appbuilder.security.decorators import permission_name, has_access_api
+from flask_appbuilder.widgets import FormWidget
 from flask_appbuilder.models.sqla.interface import SQLAInterface
 from flask_appbuilder.charts.views import GroupByChartView
 from flask_appbuilder import SimpleFormView, MultipleView
@@ -104,25 +107,47 @@ class DeviceModelView(ModelView):
     base_order = ('name', 'asc')
     label_columns = {'name': 'Name', 'device_location.location': 'Location', 'device_type.type': 'Device Type'}
 
+
 class ExperimentModelView(ModelView):
     datamodel = SQLAInterface(Experiment)
+
+    add_template = 'add_experiment.html'
+    add_exclude_columns = 'files'
     label_columns = {'date_created': 'Date', 'ela_users.name': 'User', 'projects.name': 'Project', 'samples.name':'Sample', 'devices.name':'Device', 'devices.type': 'Device Type', 'file_name': 'File Name', 'download': 'Download'}
     list_columns = ['ela_user.name', 'project.name', 'samples.name','device.name', 'device.device_type.type']
     show_columns = ['file_name', 'date_created', 'download']
 
-    #def pre_add(self,item):
-	#    file_list = request.files.getlist("imgs")
-	#    for files in file_list:
-	#        fileName = str(uuid.uuid4()) + secure_filename(files.filename)
-    #        image_file = os.path.join(app.config['UPLOAD_FOLDER'], fileName)
-    #        files.save(image_file)
+    @expose_api(name='create', url='/api/create', methods=['POST'])
+    @has_access_api
+    @permission_name('add')
+    def api_create(self):
+        is_valid_form = True
+        get_filter_args(self._filters)
+        exclude_cols = self._filters.get_relation_cols()
+        form = self.add_form.refresh()
 
-            # Save record
-    #        image = models.Image(record_id=record.record_id,
-    #                             fileName=fileName.encode('utf-8'))
-    #        db.session.add(image)
-    #    db.session.commit()
-	
+        self._fill_form_exclude_cols(exclude_cols, form)
+        if form.validate():
+            item = self.datamodel.obj()
+            form.populate_obj(item)
+            self.pre_add(item)
+            if self.datamodel.add(item):
+                self.post_add(item)
+                http_return_code = 200
+            else:
+                http_return_code = 500
+        else:
+            is_valid_form = False
+        if is_valid_form:
+            response = make_response(jsonify({'message': self.datamodel.message[0],
+                                              'id': item.id,
+                                              'severity': self.datamodel.message[
+                                                  1]}), http_return_code)
+        else:
+            # TODO return dict with errors
+            response = make_response(jsonify({'message': 'Invalid form',
+                                              'severity': 'warning'}), 500)
+        return response
 
 
 def pretty_month_year(value):
@@ -131,6 +156,7 @@ def pretty_month_year(value):
 
 def pretty_year(value):
     return str(value.year)
+
 
 class FilesUploadView(BaseView):
 
@@ -143,11 +169,10 @@ class FilesUploadView(BaseView):
         file.seek(0)  # Reset the file position to the beginning
         return size
 
-
     @expose('/upload/', methods=['POST'])
     def upload(self):
         # TODO: use form and force experiment_id
-        experiment_id = int(request.form.get('experiment_id', 1))
+        experiment_id = request.form['experiment_id']
 
         session = self.appbuilder.get_session()
 
@@ -164,7 +189,6 @@ class FilesUploadView(BaseView):
 
             file.save(file_path)
 
-
             db_file = File(file_name=file_name, experiment_id=experiment_id)
 
             session.add(db_file)
@@ -180,6 +204,8 @@ class FilesUploadView(BaseView):
                 # 'deleteType': '',
                 # 'error': None,
             })
+
+        flash('Experiment created.', 'info')
 
         return jsonify({'files': results})
 
@@ -199,6 +225,7 @@ appbuilder.add_view(UserTypeModelView, "User Type", icon="fa-envelope", category
 appbuilder.add_view(ProjectModelView, "Projects", icon="fa-envelope", category="Projects")
 
 appbuilder.add_view(ExperimentModelView, "Experiments", icon="fa-envelope", category="Experiments")
+
 #appbuilder.add_separator("Main-Menu")
 
 appbuilder.add_view(SampleModelView, "Samples", icon="fa-envelope", category="Samples")

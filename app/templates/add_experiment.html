@@ -1,10 +1,13 @@
 {% extends 'appbuilder/general/model/add.html' %}
 
-{% block content %}
-
-{{ lib.panel_begin(title) }}
+{% block head_css %}
+{{ super() }}
 
 <link rel="stylesheet" href="{{ url_for('static', filename='jquery-file-upload/css/jquery.fileupload.css') }}">
+
+{% endblock %}
+
+{% block add_form %}
 
 <form id="fileupload" action="/files/upload/" method="POST" enctype="multipart/form-data">
 
@@ -20,10 +23,12 @@
                 <input type="file" name="files[]" multiple>
             </span>
 
-            <button type="submit" class="btn btn-primary start">
-                <i class="glyphicon glyphicon-upload"></i>
-                <span>Save </span>
-            </button>
+            <!--<button type="submit" class="btn btn-primary start">-->
+                <!--<i class="glyphicon glyphicon-upload"></i>-->
+                <!--<span>Save </span>-->
+            <!--</button>-->
+
+            <div class="start"></div>
 
             <!--<button type="reset" class="btn btn-warning cancel">-->
                 <!--<i class="glyphicon glyphicon-ban-circle"></i>-->
@@ -45,12 +50,11 @@
 
 </form>
 
+{{ widgets.get('add')(form_action=form_action)|safe }}
 
-{% block add_form %}
-    {{ widgets.get('add')(form_action=form_action)|safe }}
 {% endblock %}
 
-{{ lib.panel_end() }}
+{% block add_tail_js %}
 
 <!-- The template to display files available for upload -->
 <script id="template-upload" type="text/x-tmpl">
@@ -151,5 +155,5 @@
 <script src="{{ url_for('static', filename='jquery-file-upload/js/jquery.fileupload-ui.js') }}"></script>
 <script src="{{ url_for('static', filename='js/file_uploads.js') }}"></script>
 
+
 {% endblock %}
-s

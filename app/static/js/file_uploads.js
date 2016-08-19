@@ -19,4 +19,24 @@ $(function () {
             .call(this, $.Event('done'), {result: result});
     });
 
+    $('#model_form').submit(function( event ) {
+      event.preventDefault();
+
+      var form = $(this);
+
+      $.ajax({
+         url   : '/experimentmodelview/api/create',
+         type  : form.attr('method'),
+         data  : form.serialize(),
+         success: function(response) {
+             $('#fileupload').fileupload({
+                formData: {'experiment_id': response.id}
+             });
+
+             $('.start').click();
+
+         },
+      });
+    });
+
 });
