@@ -17,7 +17,6 @@ from werkzeug.utils import secure_filename
 from app import db, appbuilder
 from .models import Material, ProjectStatus, DeviceLocation, DeviceType, UserType
 from .models import ElaUser, Project, Sample, Device, Experiment, File
-from .forms import UploadFiles
 
 
 class UserModelView(ModelView):
@@ -133,24 +132,6 @@ def pretty_month_year(value):
 def pretty_year(value):
     return str(value.year)
 
-
-class FileUploadView(SimpleFormView):
-    form = UploadFiles
-    form_title = 'Multi-file Dataset Upload'
-    message = 'Upload request submitted'
-    form_template = 'files_upload.html'
-
-    def form_get(self, form):
-        pass
-
-    def form_post(self, form):
-        # post process form
-        #uploaded_files = flask.request.files.getlist("file[]")
-        #uploaded_files = form.files.getlist("file[]")
-        uploaded_files = form.files
-        flash(self.message, 'info')
-
-
 class FilesUploadView(BaseView):
 
     route_base = '/files'
@@ -228,7 +209,6 @@ appbuilder.add_view_no_menu(FilesUploadView())
 # Materials will go here
 # Search will go here or, better, in the top panel as a field
 
-appbuilder.add_view(FileUploadView, "File Upload", icon="fa-envelope", category="Data Management")
 #appbuilder.add_view(FileDownloadView, "File Download", icon="fa-envelope", category="Data Management")
 
 #appbuilder.add_view_no_menu(HomePageView())

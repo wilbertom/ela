@@ -11,7 +11,3 @@ class MyForm(DynamicForm):
     field2 = StringField(('Field2'),
         description=('Your field number two!'), widget=BS3TextFieldWidget())
 
-
-class UploadFiles(DynamicForm):
-    eperiment_id = IntegerField()
-
