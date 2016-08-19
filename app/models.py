@@ -102,8 +102,8 @@ class File(Model):
     def download(self):
         return Markup('<a href="' + url_for('ExperimentModelView.download', filename=str(self.file_name)) + '">Download</a>')
 
-    def file_name(self):
-        return get_file_original_name(str(self.file_name))
+    # def file_name(self):
+    #     return get_file_original_name(str(self.file_name))
 
 
 class Material(Model):
