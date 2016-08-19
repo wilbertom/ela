@@ -86,6 +86,9 @@ class Experiment(Model):
     ela_user = relationship(u'ElaUser', primaryjoin='Experiment.ela_user_id == ElaUser.id', backref=u'experiments')
     samples = relationship(u'Sample', primaryjoin='Experiment.sample_id == Sample.id', backref=u'experiment')
 
+    def __repr__(self):
+      return 'Experiment by {} on {}'.format(self.ela_user.name, self.date_created)
+
 
 class File(Model):
     __tablename__ = 'files'

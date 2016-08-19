@@ -1,5 +1,5 @@
 import calendar
-from flask import flash
+from flask import flash, url_for
 from flask_appbuilder import ModelView
 from flask_appbuilder.models.sqla.interface import SQLAInterface
 from flask_appbuilder.charts.views import GroupByChartView
@@ -134,11 +134,11 @@ class FileUploadView(SimpleFormView):
     form = UploadFiles
     form_title = 'Multi-file Dataset Upload Form'
     message = 'Upload request submitted'
-    #show_template = 'jQuery-File-Upload-9.12.5/index.html'
+    show_template = 'jQuery-File-Upload-9.12.5/index.html'
 
     def form_get(self, form):
         form.comment.data = 'Enter comment'
-        return self.render_template('jQuery-File-Upload-9.12.5/index.html')
+        #return self.render_template('app/static/jQuery-File-Upload-9.12.5/index.html')
 
     def form_post(self, form):
         # post process form
