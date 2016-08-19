@@ -1,6 +1,7 @@
 import calendar
-from flask import flash, url_for
-from flask_appbuilder import ModelView
+import os
+from flask import flash, url_for, request, current_app, jsonify
+from flask_appbuilder import ModelView, BaseView, expose
 from flask_appbuilder.models.sqla.interface import SQLAInterface
 from flask_appbuilder.charts.views import GroupByChartView
 from flask_appbuilder import SimpleFormView, MultipleView
@@ -11,10 +12,11 @@ from wtforms import Form, StringField, FileField, SubmitField
 from wtforms.validators import DataRequired
 from flask_appbuilder.fieldwidgets import BS3TextFieldWidget
 from flask_appbuilder.forms import DynamicForm
+from werkzeug.utils import secure_filename
 
 from app import db, appbuilder
 from .models import Material, ProjectStatus, DeviceLocation, DeviceType, UserType
-from .models import ElaUser, Project, Sample, Device, Experiment
+from .models import ElaUser, Project, Sample, Device, Experiment, File
 from .forms import UploadFiles
 
 
@@ -123,8 +125,10 @@ class ExperimentModelView(ModelView):
     #    db.session.commit()
 	
 
+
 def pretty_month_year(value):
     return calendar.month_name[value.month] + ' ' + str(value.year)
+
 
 def pretty_year(value):
     return str(value.year)
@@ -132,13 +136,12 @@ def pretty_year(value):
 
 class FileUploadView(SimpleFormView):
     form = UploadFiles
-    form_title = 'Multi-file Dataset Upload Form'
+    form_title = 'Multi-file Dataset Upload'
     message = 'Upload request submitted'
-    show_template = 'jQuery-File-Upload-9.12.5/index.html'
+    form_template = 'files_upload.html'
 
     def form_get(self, form):
-        form.comment.data = 'Enter comment'
-        #return self.render_template('app/static/jQuery-File-Upload-9.12.5/index.html')
+        pass
 
     def form_post(self, form):
         # post process form
@@ -146,6 +149,58 @@ class FileUploadView(SimpleFormView):
         #uploaded_files = form.files.getlist("file[]")
         uploaded_files = form.files
         flash(self.message, 'info')
+
+
+class FilesUploadView(BaseView):
+
+    route_base = '/files'
+
+    @staticmethod
+    def get_file_size(file):
+        file.seek(0, 2)  # Seek to the end of the file
+        size = file.tell()  # Get the position of EOF
+        file.seek(0)  # Reset the file position to the beginning
+        return size
+
+
+    @expose('/upload/', methods=['POST'])
+    def upload(self):
+        # TODO: use form and force experiment_id
+        experiment_id = int(request.form.get('experiment_id', 1))
+
+        session = self.appbuilder.get_session()
+
+        results = []
+
+        for file in request.files.values():
+            file_name = '{}-{}'.format(
+                experiment_id, secure_filename(file.filename)
+            )
+
+            file_path = os.path.join(
+                current_app.config['UPLOAD_FOLDER'], file_name
+            )
+
+            file.save(file_path)
+
+
+            db_file = File(file_name=file_name, experiment_id=experiment_id)
+
+            session.add(db_file)
+            session.commit()
+
+            results.append({
+                'name': file_name,
+                'size': self.get_file_size(file),
+                'type': file.mimetype,
+                # 'thumbnailUrl': '',
+                # 'url': '',
+                # 'deleteUrl': '',
+                # 'deleteType': '',
+                # 'error': None,
+            })
+
+        return jsonify({'files': results})
 
 
 #class HomePageView(MultipleView):
@@ -169,6 +224,7 @@ appbuilder.add_view(SampleModelView, "Samples", icon="fa-envelope", category="Sa
 
 appbuilder.add_view(DeviceModelView, "Equipment", icon="fa-envelope", category="Equipment")
 
+appbuilder.add_view_no_menu(FilesUploadView())
 # Materials will go here
 # Search will go here or, better, in the top panel as a field
 

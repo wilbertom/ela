@@ -1,4 +1,4 @@
-from wtforms import Form, StringField, FileField, SubmitField
+from wtforms import Form, StringField, FileField, SubmitField, IntegerField
 from wtforms.validators import DataRequired
 from flask_appbuilder.fieldwidgets import BS3TextFieldWidget
 from flask_appbuilder.forms import DynamicForm
@@ -13,10 +13,5 @@ class MyForm(DynamicForm):
 
 
 class UploadFiles(DynamicForm):
+    eperiment_id = IntegerField()
 
-    comment = StringField(('Comment'))
-    files = FileField('Select Dataset Files', render_kw={'multiple': True})
-        #'Select Dataset Files',
-        #render_kw={'multiple': True},
-    #)
-    upload = SubmitField('Upload Now!')

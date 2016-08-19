@@ -12,10 +12,10 @@ OPENID_PROVIDERS = [
     {'name': 'Flickr', 'url': 'http://www.flickr.com/<username>'},
     {'name': 'MyOpenID', 'url': 'https://www.myopenid.com'}]
 
-#SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.db')
+SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.db')
 #SQLALCHEMY_DATABASE_URI = 'mysql://username:password@mysqlserver.local/quickhowto'
 
-SQLALCHEMY_DATABASE_URI = 'postgresql://pgela:pgela@localhost:5432/eladb_aug18'
+#SQLALCHEMY_DATABASE_URI = 'postgresql://pgela:pgela@localhost:5432/eladb_aug18'
 
 #SQLALCHEMY_ECHO = True
 SQLALCHEMY_POOL_RECYCLE = 3
@@ -47,6 +47,7 @@ AUTH_ROLE_ADMIN = 'Admin'
 AUTH_ROLE_PUBLIC = 'Public'
 
 APP_NAME = "ELA Web UI v1.0.2"
+
 #APP_ICON = "matin-logo.png"
 #APP_THEME = "matin-ela.css"
 
